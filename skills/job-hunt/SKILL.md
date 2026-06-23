@@ -25,6 +25,53 @@ The plugin's six sub-agents:
 | `jh-resume-tailor` | review | Tailor LaTeX + compile PDF for one chosen job |
 | `jh-linkedin-saver` | review | Save ONE chosen job to LinkedIn, write fit-analysis |
 
+## P0 — Preflight: verify prerequisites (ALWAYS run this first)
+
+Before workspace setup and before ANY phase logic, verify the plugin's
+external dependencies. The job-hunt agents are pure prompts — they delegate
+all real work to two external tools, and neither ships with this plugin:
+
+- the **LinkedIn MCP server** (provides every `mcp__linkedin__*` tool), and
+- **`tectonic`** (the LaTeX engine that builds tailored PDFs in review).
+
+If a prerequisite is missing, print the remediation shown below and **stop**
+— do not begin a phase against a broken environment. Run these checks in
+order:
+
+1. **LinkedIn MCP server is configured.** Confirm the `mcp__linkedin__*`
+   tools are present in your toolset (e.g. `mcp__linkedin__get_my_profile`,
+   `mcp__linkedin__search_jobs`). If they are absent, the MCP server isn't
+   installed/registered. Tell the user and stop:
+   > ⚠️ The **LinkedIn MCP server** isn't configured. This plugin can't
+   > search or save jobs without it. Add it to your Claude Code MCP
+   > servers (it's the server that provides the `mcp__linkedin__*` tools),
+   > then **restart Claude Code** and re-run `/job-hunt`.
+
+2. **LinkedIn is authenticated.** Call `mcp__linkedin__get_my_profile` with
+   no arguments. On an auth/login error, tell the user and stop:
+   > ⚠️ The LinkedIn MCP server is installed but **not authenticated**.
+   > Run `mcp__linkedin__authenticate_linkedin` once, then re-run
+   > `/job-hunt`.
+
+3. **`tectonic` is available** (LaTeX engine for resume PDFs). Run
+   `which tectonic`. Behaviour is **phase-aware**:
+   - **`phase=review`** (tailoring happens) → tectonic is **required**. If
+     missing, stop:
+     > ⚠️ `tectonic` is not on your `$PATH`. Review tailors resumes into
+     > PDFs and needs it. Install it
+     > (macOS: `brew install tectonic`; others:
+     > <https://tectonic-typesetting.github.io/>), verify with
+     > `which tectonic`, then re-run.
+   - **`phase=discover`** (no PDFs built) → tectonic is **not needed yet**.
+     If missing, don't block — **warn and ask**:
+     > ℹ️ `tectonic` isn't installed. Discovery doesn't need it, but the
+     > later `phase=review` will. Continue with discovery anyway?
+     Use `AskUserQuestion` (continue / abort). On "continue", proceed; on
+     "abort", stop with the install guidance above.
+
+Only after P0 passes (or the user opts to continue past the tectonic
+warning in discovery) do you move on to workspace setup and the phase.
+
 ## Setup — determine workspace
 
 Look for the user's job-hunt workspace:
@@ -65,7 +112,10 @@ LinkedIn write tool is ever called in this phase.**
 
 ## D0 — validate workspace
 
-Check, in order. Stop with an explicit error if any fails:
+P0 already verified the external prerequisites (LinkedIn MCP present +
+authenticated; tectonic warned-or-skipped for discovery). D0 validates the
+**workspace contents**. Check, in order. Stop with an explicit error if any
+fails:
 
 1. **Resume present and well-formed.** `<workspace>/resume/base.tex`
    exists and contains all three sentinel pairs:
@@ -75,12 +125,6 @@ Check, in order. Stop with an explicit error if any fails:
    Read the file and grep for each sentinel by string match.
 2. **Configs present.** `<workspace>/preferences.yaml` and
    `<workspace>/target-companies.yaml` both exist and are valid YAML.
-3. **LinkedIn MCP is authenticated.** Call `mcp__linkedin__get_my_profile`
-   with no arguments. On an auth error, tell the user to invoke
-   `mcp__linkedin__authenticate_linkedin` and stop.
-
-`tectonic` is NOT required for discovery (no PDFs are built here) — defer
-that check to review.
 
 ## D1 — profile
 
@@ -150,11 +194,11 @@ they approve, one at a time. This is the mandatory human gate.
 
 ## R0 — validate
 
+P0 already verified the external prerequisites (LinkedIn MCP present +
+authenticated; tectonic **required** and confirmed for review). R0 just
+confirms the workspace:
+
 1. Validate the workspace path and that `preferences.yaml` exists.
-2. **`tectonic` on PATH.** Run `which tectonic`. If missing, tell the user
-   to install it from <https://tectonic-typesetting.github.io/> and stop
-   (review tailors resumes).
-3. **LinkedIn MCP authenticated** (`mcp__linkedin__get_my_profile`).
 
 ## R1 — locate the iteration
 
