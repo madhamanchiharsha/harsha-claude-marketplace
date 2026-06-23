@@ -1,0 +1,13 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Job-hunt runtime output (should never be committed to the marketplace)
+runs/
+.job-hunt/
+*.pdf

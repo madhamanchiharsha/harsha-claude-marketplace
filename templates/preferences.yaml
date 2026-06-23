@@ -1,0 +1,39 @@
+# Job-hunt preferences. Copy to <workspace>/preferences.yaml and edit.
+# The fit-scorer reads this to filter and score jobs.
+
+locations:
+  - "Remote (US)"
+  - "San Francisco, CA"
+
+remote_policy:
+  - remote
+  - hybrid
+
+seniority:
+  - Senior
+  - Staff
+
+salary_min: 180000
+
+# Jobs without ALL these keywords in the description are filtered at search time.
+# Leave empty to disable.
+must_have_keywords: []
+
+# Jobs containing ANY of these in title or description are auto-skipped.
+must_avoid_keywords:
+  - Crypto
+  - Web3
+
+visa_sponsorship_required: false
+
+# Decision thresholds — see jh-fit-scorer for how these are applied.
+scoring:
+  recommend_min: 0.70           # score >= this -> shortlist for user approval
+  close_fit_min: 0.50           # score in [close_fit_min, recommend_min) -> log gaps to missing-skills.md
+  required_core_match_floor: 0.5  # if <50% of JD's required skills match your core skills, cap at close-fit
+
+# Search bounds.
+search:
+  per_company_limit: 10         # max jobs per company query
+  per_keyword_limit: 50         # max jobs per cross-cutting core-skill query
+  date_posted: past_week        # past_24h | past_week | past_month

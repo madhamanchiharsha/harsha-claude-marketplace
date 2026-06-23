@@ -1,0 +1,15 @@
+{
+  "name": "harsha-claude-marketplace",
+  "owner": {
+    "name": "harshavardhanmadhamanchi"
+  },
+  "description": "Personal Claude Code plugin marketplace by harshavardhanmadhamanchi",
+  "plugins": [
+    {
+      "name": "linkedin-job-hunt",
+      "description": "Multi-agent LinkedIn job hunt with LaTeX resume tailoring. Searches target companies, scores fit asymmetrically against your resume, generates tailored per-job PDFs via tectonic, and saves approved jobs to LinkedIn.",
+      "source": "./",
+      "version": "0.1.0"
+    }
+  ]
+}

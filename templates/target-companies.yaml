@@ -1,0 +1,17 @@
+# Companies to search at each invocation. Copy to <workspace>/target-companies.yaml.
+#
+# `keywords` narrow the search within the company. Empty list = search any
+# role at the company subject to preferences.yaml filters.
+
+companies:
+  - name: Stripe
+    keywords: ["backend", "platform"]
+
+  - name: Anthropic
+    keywords: ["infrastructure", "applied"]
+
+  - name: Datadog
+    keywords: []
+
+  - name: Cloudflare
+    keywords: ["systems", "edge"]

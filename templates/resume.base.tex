@@ -1,0 +1,70 @@
+% Base resume template for the linkedin-job-hunt plugin.
+% Copy this to <workspace>/resume/base.tex and replace the content with your own.
+%
+% IMPORTANT: keep the % <<TAILOR-START: ZONE>> and % <<TAILOR-END: ZONE>>
+% comment markers exactly as-is. The resume-tailor agent edits ONLY between
+% these markers when producing per-job tailored copies. Anything outside the
+% markers (preamble, layout, factual content like company names and dates)
+% is treated as immutable.
+%
+% Three zones are required: SUMMARY, SKILLS, BULLETS. Add more if you want
+% (the agent will edit any zone it finds), but the orchestrator's Phase 0
+% validates these three exist.
+
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=0.75in]{geometry}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\setlist{nosep}
+\pagestyle{empty}
+
+\begin{document}
+
+\begin{center}
+{\LARGE \textbf{YOUR NAME}} \\
+your.email@example.com $\cdot$ +1 555-555-5555 $\cdot$ \href{https://www.linkedin.com/in/you}{linkedin.com/in/you} $\cdot$ \href{https://github.com/you}{github.com/you}
+\end{center}
+
+\section*{Summary}
+% <<TAILOR-START: SUMMARY>>
+Senior backend engineer with 8 years of experience building distributed systems
+in Go and Python. Led the migration of a legacy monolith to microservices
+serving 10M+ requests/day. Comfortable owning a system from API contract
+through on-call.
+% <<TAILOR-END: SUMMARY>>
+
+\section*{Skills}
+% <<TAILOR-START: SKILLS>>
+\textbf{Languages:} Go, Python, TypeScript \\
+\textbf{Infrastructure:} Kubernetes, Terraform, AWS, GCP \\
+\textbf{Data:} PostgreSQL, Redis, Kafka, ClickHouse \\
+\textbf{Practices:} distributed systems, event-driven architecture, observability
+% <<TAILOR-END: SKILLS>>
+
+\section*{Experience}
+
+\textbf{Acme Corp} \hfill 2022 -- Present \\
+\textit{Senior Backend Engineer}
+% <<TAILOR-START: BULLETS>>
+\begin{itemize}
+  \item Designed and shipped a distributed task queue handling 50M jobs/day with sub-second tail latency.
+  \item Reduced p99 latency of the payments API by 40\% via query optimization and read-replica routing.
+  \item Mentored 4 engineers; led the platform team's on-call rotation redesign.
+  \item Owned the migration from RabbitMQ to Kafka, including dual-write rollout and consumer cutover.
+\end{itemize}
+% <<TAILOR-END: BULLETS>>
+
+\textbf{BigCo} \hfill 2018 -- 2022 \\
+\textit{Software Engineer}
+\begin{itemize}
+  \item Built the internal feature-flag service used by 200+ microservices.
+  \item Shipped the company's first GraphQL gateway; authored the schema-stitching guidelines.
+  \item Investigated and fixed a multi-week data-corruption bug affecting 0.3\% of orders.
+\end{itemize}
+
+\section*{Education}
+
+\textbf{State University} \hfill 2014 -- 2018 \\
+B.S. Computer Science
+
+\end{document}
