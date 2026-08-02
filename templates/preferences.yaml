@@ -26,6 +26,11 @@ must_avoid_keywords:
 
 visa_sponsorship_required: false
 
+# Your portfolio/personal website URL. resume-tailor fetches this on each run
+# (cached by content hash) to supplement base.tex with projects and skills
+# not in your resume. Leave empty to skip.
+portfolio_url: ""
+
 # Decision thresholds — see jh-fit-scorer for how these are applied.
 scoring:
   recommend_min: 0.70           # score >= this -> shortlist for user approval
