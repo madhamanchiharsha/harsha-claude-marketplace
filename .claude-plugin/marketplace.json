@@ -1,14 +1,18 @@
 {
   "name": "harsha-claude-marketplace",
-  "owner": {
-    "name": "harshavardhanmadhamanchi"
-  },
+  "owner": { "name": "harshavardhanmadhamanchi" },
   "description": "Personal Claude Code plugin marketplace by harshavardhanmadhamanchi",
   "plugins": [
     {
       "name": "linkedin-job-hunt",
       "description": "Multi-agent LinkedIn job hunt with LaTeX resume tailoring. Searches target companies, scores fit asymmetrically against your resume, generates tailored per-job PDFs via tectonic, and saves approved jobs to LinkedIn.",
       "source": "./",
+      "version": "0.1.0"
+    },
+    {
+      "name": "resume-tailor",
+      "description": "Standalone LaTeX resume tailoring with ATS scoring. Tailors base.tex against any job description, fetches portfolio website for supplemental context, iterates up to 5 times without degrading ATS score, and writes actionable suggestions.",
+      "source": "./resume-tailor/",
       "version": "0.1.0"
     }
   ]

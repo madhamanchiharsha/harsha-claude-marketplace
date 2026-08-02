@@ -1,0 +1,9 @@
+{
+  "name": "resume-tailor",
+  "version": "0.1.0",
+  "description": "Standalone LaTeX resume tailoring with ATS scoring. Tailors base.tex against any job description, fetches portfolio website for supplemental context, iterates up to 5 times without degrading the ATS score, and writes actionable suggestions for manual improvements.",
+  "author": {
+    "name": "harshavardhanmadhamanchi"
+  },
+  "skills": "./skills/"
+}
