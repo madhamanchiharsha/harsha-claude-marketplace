@@ -143,7 +143,7 @@ Then add:
 - **Caveats block** — flag any `borderline` comp cells (may dip below the floor; confirm at offer), any companies excluded for failing the floor, and the standing limits (can't see logged-in portals; live reqs churn; comp is estimated).
 - **Unverified list** (if any) — companies discovered but not yet verified, offered for a follow-up pass.
 
-Close with the elapsed time and an offer of next steps: "Want me to (a) verify the remaining companies, (b) draft tailored referral-request messages / a one-line pitch for the referral-track companies, or (c) re-run with different filters?"
+Close with the elapsed time and an offer of next steps: "Want me to (a) verify the remaining companies, (b) save all results to `~/job-search-results/` and draft referral messages (one-line pitch + cold DM + email template) for every company in Table 2, or (c) re-run with different filters?"
 
 ---
 
