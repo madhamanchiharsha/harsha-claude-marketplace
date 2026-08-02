@@ -240,14 +240,22 @@ Never batch saves. One human decision → at most one save.
 For the job the user just approved (`<job_id>`, folder `<job_folder>` =
 `<workspace>/<folder>`):
 
-1. **Tailor.** Dispatch `jh-resume-tailor`:
-   > "Run the procedure in `agents/jh-resume-tailor.md`. Workspace:
-   > `<workspace>`. Job id: `<job_id>`. Job folder: `<job_folder>`.
-   > Scored entry: `<contents of <job_folder>/fit.json>`."
-   The tailor writes `resume.tex` / `resume.pdf` / `tailor-diff.md` INTO
+1. **Tailor.** Dispatch `rt-resume-tailor` from the `resume-tailor` plugin:
+   > "Run the procedure in `resume-tailor/agents/rt-resume-tailor.md`.
+   > Workspace: `<workspace>`.
+   > Output dir: `<job_folder>`.
+   > JD text: `<the value of the 'description' field from <job_folder>/job.json>`.
+   > Scored entry: `<full contents of <job_folder>/fit.json>`."
+   The agent writes `resume.tex` / `resume.pdf` / `tailor-diff.md` /
+   `ats-report.md` / `ats-iterations.json` / `suggestions.md` INTO
    `<job_folder>`. `OK`/`SKIPPED` → continue; `ERROR` → tell the user the
    tailor failed, ask whether to save anyway or skip. A tailor failure
    never aborts the loop.
+
+   Note: `resume-tailor/agents/rt-resume-tailor.md` is relative to the
+   marketplace repo root (e.g.,
+   `~/.claude/plugins/cache/harsha-claude-marketplace/resume-tailor/agents/rt-resume-tailor.md`
+   when installed). Use the absolute installed path.
 2. **Save.** Dispatch `jh-linkedin-saver` scoped to this one job:
    > "Run the procedure in `agents/jh-linkedin-saver.md`. Mode: single.
    > Workspace: `<workspace>`. Job id: `<job_id>`. Job folder:
