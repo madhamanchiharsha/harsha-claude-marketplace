@@ -14,7 +14,7 @@ The plugin runs in **two human-separated phases** so that LinkedIn writes
 are never a scripted burst — discovery is fully read-only, and saving is
 driven by you reading and deciding one job at a time.
 
-The plugin's six sub-agents:
+The plugin's sub-agents (5 internal + 1 external):
 
 | Agent | Used in | Purpose |
 |---|---|---|
@@ -22,7 +22,7 @@ The plugin's six sub-agents:
 | `jh-job-searcher` | discover | Fan out LinkedIn searches, emit `jobs.json` |
 | `jh-fit-scorer` | discover | Score each job asymmetrically, emit `scored-jobs.json` |
 | `jh-job-summarizer` | discover | Write per-job folders + summaries + `iteration.json` |
-| `jh-resume-tailor` | review | Tailor LaTeX + compile PDF for one chosen job |
+| `rt-resume-tailor` (resume-tailor plugin) | review | Tailor LaTeX + ATS scoring + compile PDF for one chosen job |
 | `jh-linkedin-saver` | review | Save ONE chosen job to LinkedIn, write fit-analysis |
 
 ## P0 — Preflight: verify prerequisites (ALWAYS run this first)
