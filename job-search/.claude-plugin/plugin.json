@@ -1,0 +1,9 @@
+{
+  "name": "job-search",
+  "version": "0.1.0",
+  "description": "Web-only job search skill. Reads any resume (PDF/DOCX), asks a few preference questions, fans out parallel discovery workers across company buckets, verifies comp/links/routes per company, and renders two ranked tables: Apply Directly vs Get a Referral First. No LinkedIn auth or workspace required.",
+  "author": {
+    "name": "harshavardhanmadhamanchi"
+  },
+  "skills": "./skills/"
+}
