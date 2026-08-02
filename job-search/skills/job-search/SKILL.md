@@ -2,7 +2,7 @@
 name: job-search
 description: "Find current job openings that match a resume, with direct apply links and per-company referral-vs-direct guidance. Use when the user wants to search/find jobs, roles, openings, or vacancies based on a resume/CV; map target companies; check which roles clear a salary floor; or decide where to apply directly vs ask for a referral. Triggers on phrases like 'find jobs for my resume', 'search software engineer roles in <city>', 'where should I apply', 'which companies should I ask for a referral'."
 user_invocable: true
-allowed-tools: [Read, Glob, Grep, Bash, Task, Agent, AskUserQuestion, WebSearch, WebFetch]
+allowed-tools: [Read, Glob, Grep, Bash, Write, Task, Agent, AskUserQuestion, WebSearch, WebFetch]
 ---
 
 You are the Job Search agent. Given a candidate's resume and a few preferences, you find currently-open roles that fit them, verify each one (comp realistic? link real? good fit?), and split the results into **"apply directly"** vs **"get a referral first."** Follow the steps in order. Use `AskUserQuestion` at every decision point so the user stays in control — never assume away a filter that changes which jobs surface. All warnings are non-blocking; the user can always override.
@@ -143,7 +143,7 @@ Then add:
 - **Caveats block** — flag any `borderline` comp cells (may dip below the floor; confirm at offer), any companies excluded for failing the floor, and the standing limits (can't see logged-in portals; live reqs churn; comp is estimated).
 - **Unverified list** (if any) — companies discovered but not yet verified, offered for a follow-up pass.
 
-Close with the elapsed time and an offer of next steps: "Want me to (a) verify the remaining companies, (b) save all results to `~/job-search-results/` and draft referral messages (one-line pitch + cold DM + email template) for every company in Table 2, or (c) re-run with different filters?"
+Close with the elapsed time and an offer of next steps: "Want me to (a) verify the remaining companies, (b) save all results to `$HOME/job-search-results/` and draft referral messages (one-line pitch + cold DM + email template) for every company in Table 2, or (c) re-run with different filters?"
 
 ---
 
@@ -157,17 +157,18 @@ Triggered when the user selects option **(b)** from the Step 7 closing offer. Ru
 date +%Y-%m-%d
 ```
 
-Set `<output_dir>` = `~/job-search-results/<YYYY-MM-DD>/` using today's date.
+Set `<output_dir>` = `$HOME/job-search-results/$(date +%Y-%m-%d)/` — use `$HOME` and a `$(date +%Y-%m-%d)` subshell so tilde expansion is not required.
 
 ```bash
-mkdir -p ~/job-search-results/<YYYY-MM-DD>
+mkdir -p "$HOME/job-search-results/$(date +%Y-%m-%d)"
 ```
 
 ### 8.2 — Slugify helper
 
 For each company name, derive its folder slug:
 - Lowercase the name.
-- Replace runs of non-alphanumeric characters (spaces, `.`, `,`, `/`, `&`, etc.) with `-`.
+- Replace `&` with `and` first (e.g. `AT&T` → `at&t` → `at-and-t`).
+- Replace runs of remaining non-alphanumeric characters (spaces, `.`, `,`, `/`, etc.) with `-`.
 - Strip leading/trailing `-`.
 
 Examples: `Stripe` → `stripe`, `Google DeepMind` → `google-deepmind`, `J.P. Morgan` → `jp-morgan`, `AT&T` → `at-and-t`.
@@ -177,8 +178,8 @@ Examples: `Stripe` → `stripe`, `Google DeepMind` → `google-deepmind`, `J.P. 
 For each company in Table 1:
 
 1. Compute `<slug>` from the company name.
-2. `mkdir -p ~/job-search-results/<YYYY-MM-DD>/<slug>/`
-3. Write `~/job-search-results/<YYYY-MM-DD>/<slug>/overview.md` using the Write tool:
+2. `mkdir -p "$HOME/job-search-results/$(date +%Y-%m-%d)/<slug>/"`
+3. Write `$HOME/job-search-results/$(date +%Y-%m-%d)/<slug>/overview.md` using the Write tool:
 
 ```markdown
 # <Company> — <roleTitle>
@@ -196,8 +197,8 @@ For each company in Table 1:
 For each company in Table 2:
 
 1. Compute `<slug>` from the company name.
-2. `mkdir -p ~/job-search-results/<YYYY-MM-DD>/<slug>/`
-3. Write `~/job-search-results/<YYYY-MM-DD>/<slug>/overview.md`:
+2. `mkdir -p "$HOME/job-search-results/$(date +%Y-%m-%d)/<slug>/"`
+3. Write `$HOME/job-search-results/$(date +%Y-%m-%d)/<slug>/overview.md` using the Write tool:
 
 ```markdown
 # <Company> — <roleTitle>
@@ -210,7 +211,7 @@ For each company in Table 2:
 - **Apply:** <bestLink or "none verified">
 ```
 
-4. Write `~/job-search-results/<YYYY-MM-DD>/<slug>/referral-pitch.md` using the Write tool, with all `<placeholders>` filled from the candidate profile (Step 1) and the verified company record (Step 6). `[Name]` stays as a literal placeholder for the user to fill in:
+4. Write `$HOME/job-search-results/$(date +%Y-%m-%d)/<slug>/referral-pitch.md` using the Write tool, with all `<placeholders>` filled from the candidate profile (Step 1) and the verified company record (Step 6). `[Name]` stays as a literal placeholder for the user to fill in:
 
 ```markdown
 # Referral Messages — <Company>
@@ -238,7 +239,7 @@ Thanks so much — I really appreciate it.
 After all files are written, print:
 
 ```
-✅ Results saved to ~/job-search-results/<YYYY-MM-DD>/
+✅ Results saved to $HOME/job-search-results/<YYYY-MM-DD>/
    <N> companies written  (<M> with referral messages)
 
 Next: Want me to (a) verify remaining unverified companies or (b) re-run with different filters?
