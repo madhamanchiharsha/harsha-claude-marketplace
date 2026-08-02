@@ -2,7 +2,6 @@
 name: job-search
 description: "Find current job openings that match a resume, with direct apply links and per-company referral-vs-direct guidance. Use when the user wants to search/find jobs, roles, openings, or vacancies based on a resume/CV; map target companies; check which roles clear a salary floor; or decide where to apply directly vs ask for a referral. Triggers on phrases like 'find jobs for my resume', 'search software engineer roles in <city>', 'where should I apply', 'which companies should I ask for a referral'."
 user_invocable: true
-version: 1.0.0
 allowed-tools: [Read, Glob, Grep, Bash, Task, Agent, AskUserQuestion, WebSearch, WebFetch]
 ---
 
