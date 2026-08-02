@@ -11,7 +11,7 @@
     },
     {
       "name": "resume-tailor",
-      "description": "Standalone LaTeX resume tailoring with ATS scoring. Tailors base.tex against any job description, fetches portfolio website for supplemental context, iterates up to 5 times without degrading ATS score, and writes actionable suggestions.",
+      "description": "Standalone LaTeX resume tailoring with ATS scoring. Tailors base.tex against any job description, fetches portfolio website for supplemental context, iterates up to 5 times without degrading the ATS score, and writes actionable suggestions for manual improvements.",
       "source": "./resume-tailor/",
       "version": "0.1.0"
     }
