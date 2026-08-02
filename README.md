@@ -1,192 +1,262 @@
-# linkedin-job-hunt
+# harsha-claude-marketplace
 
-A Claude Code plugin that automates LinkedIn job discovery, fit analysis,
-and LaTeX resume tailoring. You stay in control of LinkedIn writes and
-final applications.
+A personal Claude Code plugin marketplace. Three plugins for job hunting and resume tailoring.
 
-## What it does
+| Plugin | Skill | What it does |
+|---|---|---|
+| `linkedin-job-hunt` | `/job-hunt` | LinkedIn-authenticated job discovery, fit scoring, resume tailoring, and saving |
+| `resume-tailor` | `/resume-tailor` | Tailor a LaTeX resume to any job description with ATS scoring |
+| `job-search` | `/job-search` | Web-only job search from any resume — no LinkedIn auth required |
 
-1. Reads your LaTeX resume (`resume/base.tex`) and target-company list.
-2. Searches LinkedIn for jobs matching your preferences (via the LinkedIn MCP).
-3. Scores each job **asymmetrically** — does the job's needs match your
-   strengths? (Resume skills not in the JD aren't penalized.)
-4. Presents a ranked shortlist; **you approve which jobs to pursue.**
-5. For each approved job, tailors your resume (within bounded `<<TAILOR>>`
-   regions) and compiles a per-job PDF via `tectonic`.
-6. Saves approved jobs to LinkedIn (so they appear on your saved-jobs page
-   for manual application).
-7. Logs close-but-rejected jobs to `missing-skills.md` so you can see which
-   skills are holding you back.
+---
 
-## Why it's structured this way
+## Plugin 1 — linkedin-job-hunt
 
-- **Five focused sub-agents**, one verb each (analyze, search, score, tailor,
-  save). Files are the only contract between them — no agent-to-agent
-  prompt passing.
-- **One approval gate** in the middle of the pipeline. Nothing writes to
-  your LinkedIn account until you say which jobs to pursue.
-- **Tailor zones** in the LaTeX source (`<<TAILOR-START: ZONE>> ... <<TAILOR-END: ZONE>>`)
-  bound where the tailor agent is allowed to edit. Preamble, packages,
-  factual content (companies, dates, titles) are off-limits.
-- **No code, no tests** — this is a pure-prompt plugin. The five agents
-  are LLM-driven; deterministic operations (LaTeX compile, LinkedIn API
-  calls) are delegated to `tectonic` and the LinkedIn MCP.
+Multi-agent LinkedIn job hunt. Reads your LaTeX resume and target-company list, searches LinkedIn, scores fit asymmetrically, tailors a per-job PDF, and saves approved jobs to LinkedIn. You stay in control of every LinkedIn write.
 
-## Prerequisites
+### Prerequisites
 
-- **Claude Code** with the **LinkedIn MCP server** configured and
-  authenticated. Run `mcp__linkedin__authenticate_linkedin` once before
-  first use.
-- **`tectonic`** on `$PATH` — install from
-  <https://tectonic-typesetting.github.io/>.
-  - macOS: `brew install tectonic`
-  - Linux: see project install guide
-  - Verify: `which tectonic`
+- **Claude Code** with the **LinkedIn MCP server** configured and authenticated.
+- **`tectonic`** on `$PATH` — install from <https://tectonic-typesetting.github.io/> (`brew install tectonic` on macOS).
 
-## Workspace setup
-
-Pick a directory to be your job-hunt workspace (separate from this plugin
-repo), then bootstrap it:
+### Workspace setup
 
 ```bash
 mkdir my-job-hunt && cd my-job-hunt
 
-# copy the templates from this plugin
 cp <plugin-path>/templates/preferences.yaml      preferences.yaml
 cp <plugin-path>/templates/target-companies.yaml target-companies.yaml
 mkdir resume
 cp <plugin-path>/templates/resume.base.tex       resume/base.tex
 ```
 
-Now edit those three files:
-- **`resume/base.tex`** — replace placeholder content with your real
-  resume. **Keep the `% <<TAILOR-START: ...>>` and `% <<TAILOR-END: ...>>`
-  comment markers** — they're how the tailor agent knows which regions
-  it's allowed to edit. Required zones: `SUMMARY`, `SKILLS`, `BULLETS`.
-- **`preferences.yaml`** — set your locations, remote policy, salary min,
-  must-avoid keywords, scoring thresholds.
-- **`target-companies.yaml`** — list the companies you want crawled and
-  optional per-company keyword filters.
+Edit the three files:
+- **`resume/base.tex`** — replace placeholder content with your real resume. Keep the `% <<TAILOR-START: ZONE>>` / `% <<TAILOR-END: ZONE>>` sentinels (required zones: `SUMMARY`, `SKILLS`, `BULLETS`).
+- **`preferences.yaml`** — location, remote policy, salary floor, scoring thresholds.
+- **`target-companies.yaml`** — companies to search and optional per-company keyword filters.
 
-## Running
-
-In Claude Code, with your workspace as the cwd:
+### Running
 
 ```
 /job-hunt
 ```
 
-The orchestrator runs Phases 0–7:
+Runs in two human-separated phases:
 
-1. **Validate** — checks resume, configs, tectonic, LinkedIn auth
-2. **Profile** — extracts a structured skills profile from your resume (cached)
-3. **Search** — LinkedIn MCP queries across companies + core skills
-4. **Score** — asymmetric fit analysis per job
-5. **GATE** — shows you a ranked table; you reply with row numbers, `all`, or `none`
-6. **Tailor** — generates per-job tailored LaTeX + PDF for approved jobs (parallel)
-7. **Save** — saves approved jobs to LinkedIn; appends rejected close-fits to `missing-skills.md`
-
-Outputs land in:
-- `runs/<timestamp>/` — per-invocation history (jobs, scores, shortlist, log)
-- `opportunity/<job_id>/` — per-job folders (`job.json`, `fit-analysis.md`,
-  `resume.tex`, `resume.pdf`, `tailor-diff.md`)
-- `missing-skills.md` — accumulated skill-gap ledger
-
-### Re-running a single phase
-
-If you tune `preferences.yaml` and want to re-score without re-searching:
+**Phase: discover** (default, read-only on LinkedIn)
+1. Analyzes `resume/base.tex` → structured skills profile
+2. Fans out LinkedIn searches across target companies
+3. Scores each job asymmetrically (job needs vs. your strengths)
+4. Writes per-job folders + `overview.md` + `iteration.json` under `jobs/itr_N/`
+5. Never touches your LinkedIn saved-jobs list
 
 ```
-/job-hunt phase=score
+/job-hunt phase=discover
 ```
 
-If you want to re-tailor a previous run's shortlist (e.g., after editing
-your `base.tex`):
+**Phase: review** (human-driven saving)
+1. Walks you through discovered jobs one at a time
+2. For each job you approve: tailors your resume (bounded tailor zones), compiles PDF via `tectonic`, saves to LinkedIn
+3. Appends skipped close-fits to `missing-skills.md`
 
 ```
-/job-hunt phase=tailor run=2026-05-28T14-00-00Z
+/job-hunt phase=review
+/job-hunt phase=review itr=2   # review a specific iteration
 ```
 
-## Workspace layout (after a few runs)
+### Workspace layout
 
 ```
 my-job-hunt/
-├── resume/base.tex                # your canonical LaTeX resume — never auto-edited
+├── resume/base.tex                    # canonical LaTeX resume — never auto-edited
 ├── preferences.yaml
 ├── target-companies.yaml
-├── .job-hunt/skills-profile.json  # cache (regenerated when base.tex changes)
-├── runs/
-│   └── 2026-05-28T14-00-00Z/
+├── .job-hunt/skills-profile.json      # cached profile (regenerated when base.tex changes)
+├── jobs/
+│   └── itr_1/
 │       ├── jobs.json
 │       ├── scored-jobs.json
-│       ├── shortlist.json
-│       └── log.md
-├── opportunity/
-│   └── 3812345678/
-│       ├── job.json
-│       ├── fit-analysis.md
-│       ├── resume.tex             # tailored copy
-│       ├── resume.pdf             # tectonic output
-│       └── tailor-diff.md         # human-readable diff for review
-└── missing-skills.md              # skill-gap ledger
+│       ├── iteration.json
+│       ├── overview.md
+│       └── <company-role>/
+│           ├── job.json
+│           ├── fit.json
+│           ├── overview.md
+│           ├── description.md
+│           ├── resume.tex             # tailored copy (written in review phase)
+│           ├── resume.pdf
+│           ├── tailor-diff.md
+│           └── fit-analysis.md
+└── missing-skills.md                  # skill-gap ledger
 ```
 
-## How the tailor zones work
+### How tailor zones work
 
-Your `resume/base.tex` is the source of truth and is never modified by
-the plugin. The tailor agent is allowed to edit ONLY between sentinel
-comments:
+`resume/base.tex` is never modified. The tailor agent edits only between sentinels:
 
 ```latex
-\section*{Summary}
 % <<TAILOR-START: SUMMARY>>
 ... your summary text ...
 % <<TAILOR-END: SUMMARY>>
 ```
 
-For each shortlisted job, it:
-1. Copies `resume/base.tex` to `opportunity/<job_id>/resume.tex`
-2. Edits inside the `SUMMARY`, `SKILLS`, and `BULLETS` zones to lead with
-   the JD's required skills (using vocabulary from the JD where the
-   candidate genuinely has the skill — never inventing experience)
-3. Compiles via `tectonic resume.tex`
-4. Writes `tailor-diff.md` with a unified diff so you can verify edits
-   stayed in-bounds
+Required zones: `SUMMARY`, `SKILLS`, `BULLETS`. Content outside these zones (preamble, packages, company names, dates, titles) is off-limits.
 
-If you find an edit went outside the zones, that's a bug — file a report
-showing the offending diff.
-
-## Limitations
-
-- **No Easy Apply.** LinkedIn does not expose application submission via
-  API, so the plugin saves jobs to your saved-jobs page and you apply
-  manually. This is by design; auto-apply violates LinkedIn ToS.
-- **Tailor zone discipline is prompt-enforced.** The tailor agent is
-  instructed to stay inside sentinels but there's no runtime guard.
-  Always review `tailor-diff.md` before applying.
-- **LinkedIn API limits.** Heavy queries can hit rate limits. The
-  searcher backs off exponentially but won't paper over a hard cap; see
-  `runs/<ts>/log.md` for `partial: true` flags.
-
-## Plugin layout (this repo)
+### Plugin layout
 
 ```
-linkedin-job-hunt/
+./                                     # linkedin-job-hunt plugin root
 ├── .claude-plugin/plugin.json
 ├── agents/
 │   ├── jh-resume-analyzer.md
 │   ├── jh-job-searcher.md
 │   ├── jh-fit-scorer.md
-│   ├── jh-resume-tailor.md
+│   ├── jh-job-summarizer.md
 │   └── jh-linkedin-saver.md
 ├── skills/
 │   └── job-hunt/SKILL.md
-├── templates/
-│   ├── preferences.yaml
-│   ├── target-companies.yaml
-│   └── resume.base.tex
-└── README.md
+└── templates/
+    ├── preferences.yaml
+    ├── target-companies.yaml
+    └── resume.base.tex
 ```
 
-Pure markdown — no Python, no tests, no build step. The agents are
-LLM-driven prompts; the skill is the orchestrator.
+### Limitations
+
+- **No Easy Apply.** LinkedIn doesn't expose application submission via API — the plugin saves jobs to your saved-jobs page and you apply manually.
+- **Tailor zones are prompt-enforced.** Always review `tailor-diff.md` before submitting an application.
+- **LinkedIn rate limits.** Heavy queries can hit caps; check `iteration.json` for partial flags.
+
+---
+
+## Plugin 2 — resume-tailor
+
+Standalone LaTeX resume tailoring. Takes any job description, rewrites the bounded tailor zones in `resume/base.tex`, iterates up to 5 rounds to maximize ATS score without degrading it, and compiles a PDF.
+
+### Prerequisites
+
+- **`tectonic`** on `$PATH`.
+- A workspace with `resume/base.tex` containing `SUMMARY`, `SKILLS`, and `BULLETS` tailor zones.
+
+### Running
+
+```
+/resume-tailor
+```
+
+Accepts optional arguments:
+```
+/resume-tailor jd=~/Downloads/stripe-swe.txt
+/resume-tailor jd=~/Downloads/stripe-swe.txt output=~/tailored/
+```
+
+Outputs written to the job folder (or `output` path if specified):
+- `resume.tex` — tailored LaTeX
+- `resume.pdf` — compiled PDF
+- `ats-report.md` — ATS score breakdown per iteration
+- `ats-iterations.json` — score history
+- `tailor-diff.md` — unified diff of changes from base
+- `suggestions.md` — manual improvements outside the tailor zones
+
+### Plugin layout
+
+```
+resume-tailor/
+├── .claude-plugin/plugin.json
+├── agents/
+│   └── rt-resume-tailor.md
+└── skills/
+    └── resume-tailor/SKILL.md
+```
+
+---
+
+## Plugin 3 — job-search
+
+Web-only job search — no LinkedIn auth, no workspace setup, works with any PDF or DOCX resume. Reads your resume, asks a few preference questions, fans out parallel discovery workers across company buckets, verifies comp/links/routes per company, and renders two ranked tables.
+
+### Prerequisites
+
+None. Works out of the box with any Claude Code session.
+
+### Running
+
+```
+/job-search
+```
+
+Or point it at your resume directly:
+```
+/job-search ~/Downloads/my-resume.pdf
+```
+
+### What it does
+
+1. **Reads your resume** — extracts stack, domain, YoE, location; confirms with you.
+2. **Clarifies filters** — role focus, company types, location/remote, comp floor + currency, timeline.
+3. **Fans out parallel discovery workers** — one sub-agent per company bucket (big product, funded startups, GCCs, tier-1 services) plus a live job boards sweep.
+4. **Verifies each company** — comp realistic at your YoE? Apply link real and live? Direct apply or get a referral first?
+5. **Renders two ranked tables:**
+   - **✅ Apply Directly** — self-serve ATS boards, lower-volume companies
+   - **🤝 Get a Referral First** — high-volume companies where cold apps get buried
+6. **Saves results to disk** (on request) — per-company folders under `$HOME/job-search-results/<date>/`, with `overview.md` for every company and `referral-pitch.md` (one-line pitch + cold DM + email template) for every referral-track company.
+
+### Output folder structure (Step 8, on request)
+
+```
+~/job-search-results/
+  2026-08-02/
+    stripe/
+      overview.md          # role, comp, fit, open status, apply link
+      referral-pitch.md    # one-line pitch + cold DM + email template
+    thoughtworks/
+      overview.md          # apply-directly company — overview only
+```
+
+### Plugin layout
+
+```
+job-search/
+├── .claude-plugin/plugin.json
+├── agents/
+│   ├── job-discover.md    # discovery worker (bucket fan-out via WebSearch)
+│   └── job-verify.md      # verification worker (comp, link, route per company)
+├── skills/
+│   └── job-search/SKILL.md
+└── reference/
+    └── methodology.md     # referral-vs-direct routing heuristics
+```
+
+### Limitations
+
+- **Authenticated portals are invisible.** LinkedIn/Naukri/Instahyre behind login can't be read; works from public careers pages and job boards only.
+- **Comp is estimated** from levels.fyi / AmbitionBox / Glassdoor — a sourced range, never an offer.
+- **Open status is point-in-time.** Reqs churn weekly — re-run for a fresh view.
+- **Read-only.** Never modifies your resume, never applies on your behalf.
+
+---
+
+## Marketplace layout
+
+```
+harsha-claude-marketplace/
+├── .claude-plugin/
+│   ├── plugin.json         # linkedin-job-hunt plugin manifest
+│   └── marketplace.json    # registry of all three plugins
+├── agents/                 # linkedin-job-hunt agents (jh-*)
+├── skills/                 # linkedin-job-hunt skill (/job-hunt)
+├── templates/              # workspace bootstrap templates
+├── resume-tailor/          # resume-tailor plugin subtree
+│   ├── .claude-plugin/
+│   ├── agents/             # rt-resume-tailor
+│   └── skills/             # /resume-tailor
+├── job-search/             # job-search plugin subtree
+│   ├── .claude-plugin/
+│   ├── agents/             # job-discover, job-verify
+│   ├── skills/             # /job-search
+│   └── reference/          # methodology.md
+└── docs/
+    └── superpowers/
+        ├── specs/          # design specs
+        └── plans/          # implementation plans
+```
