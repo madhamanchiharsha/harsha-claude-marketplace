@@ -14,6 +14,12 @@
       "description": "Standalone LaTeX resume tailoring with ATS scoring. Tailors base.tex against any job description, fetches portfolio website for supplemental context, iterates up to 5 times without degrading the ATS score, and writes actionable suggestions for manual improvements.",
       "source": "./resume-tailor/",
       "version": "0.1.0"
+    },
+    {
+      "name": "job-search",
+      "description": "Web-only job search skill. Reads any resume (PDF/DOCX), asks a few preference questions, fans out parallel discovery workers across company buckets, verifies comp/links/routes per company, and renders two ranked tables: Apply Directly vs Get a Referral First. No LinkedIn auth or workspace required.",
+      "source": "./job-search/",
+      "version": "0.1.0"
     }
   ]
 }
