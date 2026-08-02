@@ -253,3 +253,150 @@ If `total_score <= best_score`:
 - Append `best_score` to `scores` (no improvement marker)
 - Set `stop_reason = "no_improvement"`
 - Break the loop
+
+## Step 6 — Write final outputs
+
+Write `best_tex` back to `<output_dir>/resume.tex`:
+Use the Write tool to write `best_tex` content to `<output_dir>/resume.tex`.
+
+Compile the final PDF:
+
+```bash
+cd "<output_dir>" && tectonic --keep-logs resume.tex 2>tectonic.stderr
+```
+
+Generate the diff:
+
+```bash
+diff -u "<workspace>/resume/base.tex" "<output_dir>/resume.tex" > /tmp/rt-diff.$$
+```
+
+Read `/tmp/rt-diff.$$` for embedding.
+
+### `tailor-diff.md`
+
+Write `<output_dir>/tailor-diff.md`:
+
+```
+# Tailoring diff
+
+**Zones touched:** SUMMARY, SKILLS, BULLETS
+**Iterations run:** <len(scores)> (best at iteration <best_iteration>)
+**Final ATS score:** <best_score>/100
+**Tectonic compile:** OK
+
+## Diff
+
+` ` `diff
+<contents of /tmp/rt-diff.$$>
+` ` `
+```
+
+### `ats-report.md`
+
+Compute the five category sub-scores for `best_tex` (same formulas as Step 5c).
+Write `<output_dir>/ats-report.md`:
+
+```
+# ATS Score Report
+
+**Score:** <best_score>/100
+**Iterations:** <scores> (<stop_reason description>)
+
+## Category Breakdown
+
+| Category | Score | Max |
+|---|---|---|
+| Keyword match | <kw_score>/40 | 40 |
+| Preferred match | <pref_score>/20 | 20 |
+| Section presence | <sec_score>/15 | 15 |
+| Quantification | <quant_score>/15 | 15 |
+| Format safety | <fmt_score>/10 | 10 |
+
+## Remaining Gaps
+
+**Required keywords not matched:** <comma-separated list, or "none">
+**Preferred keywords not matched:** <comma-separated list, or "none">
+```
+
+Stop reason descriptions:
+- `"max_iterations"` → "completed 5 iterations"
+- `"no_improvement"` → "stopped early — no improvement at iteration <i>"
+- `"compile_failed"` → "stopped early — tectonic compile failed"
+
+### `ats-iterations.json`
+
+Write `<output_dir>/ats-iterations.json`:
+
+```json
+{
+  "schema_version": 1,
+  "scores": <scores array>,
+  "best_iteration": <best_iteration>,
+  "final_score": <best_score>,
+  "stop_reason": "<stop_reason>"
+}
+```
+
+### `suggestions.md`
+
+Produce suggestions for content the user could add to `base.tex` to improve
+future runs. Write `<output_dir>/suggestions.md`:
+
+```
+# Suggestions for improving future runs
+
+These are things you could add to `resume/base.tex` to raise your ATS score.
+This agent never writes these into your resume — they are yours to consider.
+
+## Missing required skills (in JD but not in your resume)
+<for each item in unmet_required:>
+- **<skill>**: Listed as required. <one sentence on where in base.tex to add it and what to write, grounded in the actual JD phrasing>
+
+## Missing preferred skills
+<for each item in jd_preferred not found in best_tex:>
+- **<skill>**: Nice-to-have. <one sentence on how to add it if the user has any relevant experience>
+
+## Portfolio-derived suggestions
+<if website cache extracted projects not represented in base.tex:>
+- Consider adding a **Projects** section. Your portfolio at <portfolio_url> lists
+  projects (<project names>) that aren't in your resume — these could strengthen
+  the application.
+<if no portfolio_url or all projects already represented:>
+(none)
+
+## Phrasing (outside TAILOR zones — manual edits only)
+<1-3 specific bullets outside TAILOR zones in base.tex that lack quantification
+or JD keyword alignment, with concrete rewording suggestions>
+```
+
+If all four sections would be empty, write a single line:
+`No suggestions — your resume is a strong match for this JD.`
+
+## Hard constraints
+
+- **Never edit outside TAILOR zone markers.** Preamble, `\usepackage`, section
+  headers (`\section*{...}`), company names, job titles, dates, education —
+  all immutable.
+- **Never edit the sentinel comment lines themselves.** Their text is sacred.
+  Do not rename zones, add zones, remove zones, or move sentinels.
+- **Edit budget:** total line-delta across all zones ≤ 10% of file line count.
+- **Never invent.** No skills, technologies, certifications, or quantitative
+  claims that are not in `base.tex` or `website-cache extracted.skills/projects`.
+- **Never touch `<workspace>/resume/base.tex`.** It is the canonical source.
+- **Never write outside `<output_dir>`** (except: reading `base.tex`,
+  reading/writing `<workspace>/.resume-tailor/website-cache.json`,
+  reading `<workspace>/preferences.yaml`).
+- **Bash whitelist:** `cp`, `mkdir`, `rm -f`, `cd`, `tectonic`, `diff`,
+  `shasum`, `sha256sum`, `[ -s ... ]`, `echo`. Use the Edit tool (not `sed`
+  or `awk`) for all resume edits.
+- **A failure is local.** Always exit non-zero on permanent failure so the
+  caller can record it. Never crash the caller.
+
+## Output
+
+Print to stdout exactly one of:
+
+- `OK <output_dir>/resume.pdf score=<best_score>/100 iterations=<len(scores)>`
+- `SKIPPED: already tailored`
+- `ERROR: <reason>` (exit non-zero; `tailor-error.md` has diagnostics)
