@@ -147,6 +147,105 @@ Close with the elapsed time and an offer of next steps: "Want me to (a) verify t
 
 ---
 
+## Step 8 — Save results & draft referral messages
+
+Triggered when the user selects option **(b)** from the Step 7 closing offer. Runs entirely inline — no sub-agents.
+
+### 8.1 — Resolve output directory
+
+```bash
+date +%Y-%m-%d
+```
+
+Set `<output_dir>` = `~/job-search-results/<YYYY-MM-DD>/` using today's date.
+
+```bash
+mkdir -p ~/job-search-results/<YYYY-MM-DD>
+```
+
+### 8.2 — Slugify helper
+
+For each company name, derive its folder slug:
+- Lowercase the name.
+- Replace runs of non-alphanumeric characters (spaces, `.`, `,`, `/`, `&`, etc.) with `-`.
+- Strip leading/trailing `-`.
+
+Examples: `Stripe` → `stripe`, `Google DeepMind` → `google-deepmind`, `J.P. Morgan` → `jp-morgan`, `AT&T` → `at-and-t`.
+
+### 8.3 — Write Table 1 companies (apply directly)
+
+For each company in Table 1:
+
+1. Compute `<slug>` from the company name.
+2. `mkdir -p ~/job-search-results/<YYYY-MM-DD>/<slug>/`
+3. Write `~/job-search-results/<YYYY-MM-DD>/<slug>/overview.md` using the Write tool:
+
+```markdown
+# <Company> — <roleTitle>
+
+- **Route:** Apply directly
+- **Role:** <roleTitle>
+- **Comp:** <compVerdict> (source: <comp source>)
+- **Fit:** <matchStrength>
+- **Open:** <openStatus>
+- **Apply:** <bestLink or "none verified">
+```
+
+### 8.4 — Write Table 2 companies (referral track)
+
+For each company in Table 2:
+
+1. Compute `<slug>` from the company name.
+2. `mkdir -p ~/job-search-results/<YYYY-MM-DD>/<slug>/`
+3. Write `~/job-search-results/<YYYY-MM-DD>/<slug>/overview.md`:
+
+```markdown
+# <Company> — <roleTitle>
+
+- **Route:** Get a referral first
+- **Role:** <roleTitle>
+- **Comp:** <compVerdict> (source: <comp source>)
+- **Fit:** <matchStrength>
+- **Open:** <openStatus>
+- **Apply:** <bestLink or "none verified">
+```
+
+4. Write `~/job-search-results/<YYYY-MM-DD>/<slug>/referral-pitch.md` using the Write tool, with all `<placeholders>` filled from the candidate profile (Step 1) and the verified company record (Step 6). `[Name]` stays as a literal placeholder for the user to fill in:
+
+```markdown
+# Referral Messages — <Company>
+
+## One-line pitch
+"<YoE> YoE <roleType> engineer (<core stack>) with <domain> experience, targeting the <roleTitle> role at <Company> — happy to connect if you know anyone on the hiring side."
+
+## Cold DM (LinkedIn / Slack)
+Hi [Name], I came across <Company>'s <roleTitle> opening and think my background in <domain> (<YoE> YoE, <stack>, <notable signal if any>) is a strong fit. Would you be open to referring me or passing my resume to the team? Happy to share more context — no pressure at all.
+
+## Email template
+Subject: Referral request — <roleTitle>, <Company>
+
+Hi [Name],
+I hope you're well. I'm currently exploring new opportunities and noticed <Company> is hiring for a <roleTitle> role. Given my <YoE> years building <domain> systems in <stack>, I believe I'd be a strong fit.
+
+Would you be comfortable referring me or forwarding my resume to the hiring team? I've attached a one-pager for context.
+
+Thanks so much — I really appreciate it.
+[Your name]
+```
+
+### 8.5 — Print summary and close
+
+After all files are written, print:
+
+```
+✅ Results saved to ~/job-search-results/<YYYY-MM-DD>/
+   <N> companies written  (<M> with referral messages)
+
+Next: Want me to (a) verify remaining unverified companies or (b) re-run with different filters?
+```
+
+---
+
 ## Error handling
 
 | Failure | Action |
